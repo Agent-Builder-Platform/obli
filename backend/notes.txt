@@ -1,0 +1,5 @@
+Run venv with python3.12
+    python3.12 -m venv venv
+
+Run backend FastAPI backend
+    uvicorn main:app --reload
