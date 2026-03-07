@@ -280,9 +280,6 @@ export default function CreateAgentPage() {
                                   {prompt.content.slice(0, 60)}...
                                 </span>
                               </div>
-                              {!prompt.is_active && (
-                                <span className="text-xs text-base-content/30 shrink-0">disabled</span>
-                              )}
                             </button>
                           )
                         })}

@@ -5,16 +5,24 @@ import {
   Plus,
   Trash2,
   FileText,
-  ToggleLeft,
-  ToggleRight,
   Edit2,
   X,
   Check,
+  Globe,
+  Lock,
+  Users,
 } from 'lucide-react'
+
+const VISIBILITY_OPTIONS = [
+  { value: 'private', label: 'Private', icon: Lock },
+  { value: 'team', label: 'Team', icon: Users },
+  { value: 'public', label: 'Public', icon: Globe },
+]
 
 function PromptModal({ prompt, onClose, onSave }) {
   const [name, setName] = useState(prompt?.name ?? '')
   const [content, setContent] = useState(prompt?.content ?? '')
+  const [visibility, setVisibility] = useState(prompt?.visibility ?? 'private')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -26,7 +34,7 @@ function PromptModal({ prompt, onClose, onSave }) {
     }
     setSaving(true)
     try {
-      await onSave({ name: name.trim(), content: content.trim() })
+      await onSave({ name: name.trim(), content: content.trim(), visibility })
       onClose()
     } catch (err) {
       setError(err.message)
@@ -93,6 +101,36 @@ function PromptModal({ prompt, onClose, onSave }) {
             </label>
           </div>
 
+          <div className="form-control">
+            <label className="label pb-1.5">
+              <span className="label-text text-xs font-semibold uppercase tracking-wider text-base-content/50">
+                Visibility
+              </span>
+            </label>
+            <div className="flex gap-2">
+              {VISIBILITY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setVisibility(opt.value)}
+                  className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all
+                    ${
+                      visibility === opt.value
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white border-base-300 text-base-content/60 hover:border-black/40'
+                    }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-base-content/40 mt-1.5">
+              {visibility === 'private' && 'Only you can see and use this prompt.'}
+              {visibility === 'team' && 'Everyone in your organisation can use this prompt.'}
+              {visibility === 'public' && 'Anyone can use this prompt.'}
+            </p>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving} className="btn btn-primary flex-1 gap-2">
               {saving ? (
@@ -118,7 +156,6 @@ export default function SystemPromptsPage() {
   const [prompts, setPrompts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [togglingId, setTogglingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPrompt, setEditingPrompt] = useState(null)
@@ -135,19 +172,6 @@ export default function SystemPromptsPage() {
       setError(err.message)
     }
     setLoading(false)
-  }
-
-  async function handleToggle(id) {
-    setTogglingId(id)
-    try {
-      const res = await api.prompts.toggle(id)
-      setPrompts((prev) =>
-        prev.map((p) => (p.id === id ? res.prompt : p))
-      )
-    } catch (err) {
-      setError(err.message)
-    }
-    setTogglingId(null)
   }
 
   async function handleDelete(id) {
@@ -184,8 +208,6 @@ export default function SystemPromptsPage() {
     setModalOpen(true)
   }
 
-  const activeCount = prompts.filter((p) => p.is_active).length
-
   return (
     <Layout title="System Prompt Library">
       <div className="p-6 lg:p-8 max-w-4xl mx-auto">
@@ -194,8 +216,7 @@ export default function SystemPromptsPage() {
           <div>
             <h1 className="text-xl font-bold">System Prompt Library</h1>
             <p className="text-base-content/50 text-sm mt-0.5">
-              {prompts.length} prompt{prompts.length !== 1 ? 's' : ''} —{' '}
-              {activeCount} active
+              {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
@@ -242,72 +263,58 @@ export default function SystemPromptsPage() {
         {/* Prompt list */}
         {!loading && prompts.length > 0 && (
           <div className="space-y-3">
-            {prompts.map((prompt) => (
-              <div
-                key={prompt.id}
-                className={`bg-white border rounded-xl p-5 transition-all
-                  ${prompt.is_active ? 'border-base-300' : 'border-base-200 opacity-60'}`}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Toggle */}
-                  <button
-                    onClick={() => handleToggle(prompt.id)}
-                    disabled={togglingId === prompt.id}
-                    className="mt-0.5 shrink-0 transition-all hover:opacity-70"
-                    title={prompt.is_active ? 'Disable' : 'Enable'}
-                  >
-                    {togglingId === prompt.id ? (
-                      <span className="loading loading-spinner loading-xs" />
-                    ) : prompt.is_active ? (
-                      <ToggleRight size={22} className="text-black" />
-                    ) : (
-                      <ToggleLeft size={22} className="text-base-content/30" />
-                    )}
-                  </button>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-sm">{prompt.name}</h3>
-                      {!prompt.is_active && (
-                        <span className="text-xs bg-base-200 text-base-content/40 px-2 py-0.5 rounded font-medium">
-                          Disabled
+            {prompts.map((prompt) => {
+              const vis = VISIBILITY_OPTIONS.find((o) => o.value === (prompt.visibility ?? 'private'))
+              const VisIcon = vis.icon
+              return (
+                <div
+                  key={prompt.id}
+                  className="bg-white border border-base-300 rounded-xl p-5 transition-all"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-sm">{prompt.name}</h3>
+                        <span className="flex items-center gap-1 text-xs text-base-content/40 ml-auto">
+                          <VisIcon size={11} />
+                          {vis.label}
                         </span>
-                      )}
+                      </div>
+                      <p className="text-sm text-base-content/50 leading-relaxed font-mono bg-base-50 rounded-lg p-3 whitespace-pre-wrap line-clamp-4">
+                        {prompt.content}
+                      </p>
+                      <p className="text-xs text-base-content/30 mt-2">
+                        {prompt.content.length} chars
+                      </p>
                     </div>
-                    <p className="text-sm text-base-content/50 leading-relaxed font-mono bg-base-50 rounded-lg p-3 whitespace-pre-wrap line-clamp-4">
-                      {prompt.content}
-                    </p>
-                    <p className="text-xs text-base-content/30 mt-2">
-                      {prompt.content.length} chars
-                    </p>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => openEdit(prompt)}
-                      className="btn btn-ghost btn-xs btn-square text-base-content/40 hover:text-base-content"
-                      title="Edit"
-                    >
-                      <Edit2 size={13} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(prompt.id)}
-                      disabled={deletingId === prompt.id}
-                      className="btn btn-ghost btn-xs btn-square text-base-content/30 hover:text-error hover:bg-error/10"
-                      title="Delete"
-                    >
-                      {deletingId === prompt.id ? (
-                        <span className="loading loading-spinner loading-xs" />
-                      ) : (
-                        <Trash2 size={13} />
-                      )}
-                    </button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => openEdit(prompt)}
+                        className="btn btn-ghost btn-xs btn-square text-base-content/40 hover:text-base-content"
+                        title="Edit"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(prompt.id)}
+                        disabled={deletingId === prompt.id}
+                        className="btn btn-ghost btn-xs btn-square text-base-content/30 hover:text-error hover:bg-error/10"
+                        title="Delete"
+                      >
+                        {deletingId === prompt.id ? (
+                          <span className="loading loading-spinner loading-xs" />
+                        ) : (
+                          <Trash2 size={13} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

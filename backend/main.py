@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -29,4 +30,8 @@ app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 
 @app.get("/api/health", tags=["Health"])
 async def health():
-    return {"status": "ok", "service": "obli-api", "version": "1.0.0"}
+    current_time = time.time()
+    return {"status": "ok",
+            "service": "obli-api", 
+            "version": "1.0.0", 
+            "time": current_time}

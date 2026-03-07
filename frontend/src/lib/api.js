@@ -53,7 +53,6 @@ export const api = {
     update: (id, data) =>
       apiFetch(`/api/prompts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => apiFetch(`/api/prompts/${id}`, { method: 'DELETE' }),
-    toggle: (id) => apiFetch(`/api/prompts/${id}/toggle`, { method: 'PATCH' }),
   },
 
   // ── Chat ──────────────────────────────────────────────────
