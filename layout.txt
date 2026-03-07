@@ -1,0 +1,37 @@
+obli/
+├── backend/
+│   ├── main.py                    # FastAPI app entry
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── middleware/
+│   │   └── auth.py                # Supabase JWT validation
+│   ├── routers/
+│   │   ├── agents.py              # CRUD for agents
+│   │   ├── chat.py                # Chat + conversation management
+│   │   ├── models.py              # List supported AI models
+│   │   └── prompts.py             # System prompt CRUD + toggle
+│   └── services/
+│       ├── ai_providers.py        # Direct wrappers: Claude, OpenAI, Gemini
+│       └── supabase_client.py     # Supabase client singleton
+│
+├── frontend/
+│   └── src/
+│       ├── App.jsx                # Router + auth state
+│       ├── lib/
+│       │   ├── api.js             # All API calls
+│       │   └── supabase.js        # Supabase client
+│       ├── components/
+│       │   └── Layout.jsx         # Sidebar + shell
+│       └── pages/
+│           ├── LoginPage.jsx
+│           ├── SignupPage.jsx
+│           ├── DashboardPage.jsx
+│           ├── ManageAgentsPage.jsx
+│           ├── CreateAgentPage.jsx
+│           ├── ChatPage.jsx
+│           └── SystemPromptsPage.jsx
+│
+├── supabase/
+│   └── schema.sql                 # Full DB schema + RLS policies
+│
+└── README.md
