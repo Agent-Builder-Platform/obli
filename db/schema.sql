@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ────────────────────────────────────────────────────────────
 CREATE TABLE system_prompts (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,  -- NULL = system default (owned by no one)
   name        TEXT NOT NULL,
   content     TEXT NOT NULL,
   is_active   BOOLEAN DEFAULT true,
@@ -89,14 +89,23 @@ CREATE POLICY "agents_delete" ON agents
   FOR DELETE USING (user_id = auth.uid());
 
 -- System prompts policies
-CREATE POLICY "prompts_all" ON system_prompts
-  FOR ALL USING (user_id = auth.uid());
+-- Anyone (authenticated or not) can read system defaults (user_id IS NULL)
+-- Users can read and manage their own prompts
+CREATE POLICY "prompts_select" ON system_prompts
+  FOR SELECT USING (user_id IS NULL OR user_id = auth.uid());
+CREATE POLICY "prompts_insert" ON system_prompts
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "prompts_update" ON system_prompts
+  FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "prompts_delete" ON system_prompts
+  FOR DELETE USING (user_id = auth.uid());
 
 -- Conversations policies
 CREATE POLICY "conversations_all" ON conversations
   FOR ALL USING (user_id = auth.uid());
 
 -- ────────────────────────────────────────────────────────────
--- SEED DEFAULT SYSTEM PROMPTS (optional — insert as user)
+-- SEED DEFAULT SYSTEM PROMPTS
 -- ────────────────────────────────────────────────────────────
--- You can seed these from the UI after signing in.
+-- Run db/seed_defaults.py to insert the default system prompts.
+-- Prompt content lives in db/default_prompts/*.txt
