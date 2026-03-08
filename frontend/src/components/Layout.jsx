@@ -14,12 +14,6 @@ import {
 const NAV_ITEMS = [
   { label: 'Your Agents', href: '/agents', icon: Bot },
   { label: 'System Prompt Library', href: '/prompts', icon: FileText },
-  {
-    label: 'Tool Marketplace',
-    href: '#',
-    icon: MessageSquare,
-    comingSoon: true,
-  },
 ]
 
 export default function Layout({ children, title }) {
