@@ -20,8 +20,7 @@ def register(mcp):
             name: The person's name to look up (e.g. "John", "Sarah Smith").
 
         Returns:
-            Dict with 'name', 'email', and 'confidence' (number of matching
-            messages found).  Returns an error dict if no match is found.
+            Dict with 'name' and 'email'. Returns an error dict if no match is found.
         """
         service = get_gmail_service()
         email_counter = Counter()
@@ -58,12 +57,12 @@ def register(mcp):
         if not matching:
             return {
                 "status": "error",
-                "message": f"Could not find an email address for '{name}'. "
-                           f"Try providing the full email address instead.",
+                "message": f"No email found for '{name}'. Try the full email address instead.",
             }
 
         best = max(matching, key=matching.get)
-        return {"name": name, "email": best, "confidence": matching[best]}
+        # ← removed confidence field, noise for Claude
+        return {"name": name, "email": best}
 
     @mcp.tool()
     def send_email(to: str, subject: str, body: str, cc: str = "") -> dict:
@@ -73,16 +72,14 @@ def register(mcp):
             to: Recipient email address. Use "me" to send to yourself.
                 Call resolve_contact first if you only have a name.
             subject: The email subject line.
-            body: The full email body text, and remember at the end do not just leave it blank make sure you leave the user's name to finish the email.
+            body: The full email body text. Always sign off with the user's name.
             cc: CC addresses, comma-separated. Leave empty if none.
 
         Returns:
-            Dict with status, recipient, subject, body preview, and message_id.
+            Dict with status, recipient, subject, and message_id.
         """
-
         service = get_gmail_service()
 
-        # Resolve "me" / "myself" to own email
         if to.lower() in ("me", "myself", ""):
             profile = service.users().getProfile(userId="me").execute()
             to = profile["emailAddress"]
@@ -97,12 +94,12 @@ def register(mcp):
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         result = service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
+        # ← removed body_preview, saves tokens
         return {
             "status": "sent",
             "message_id": result["id"],
             "to": to,
             "subject": subject,
-            "body_preview": body[:200],
         }
 
     @mcp.tool()
@@ -118,7 +115,7 @@ def register(mcp):
             page_token: Pagination token from a previous result to get the next page.
 
         Returns:
-            Dict with 'emails' list (id, subject, from, date, snippet) and
+            Dict with 'emails' list (id, sub, from, date, preview) and
             optional 'next_page_token'.
         """
         service = get_gmail_service()
@@ -130,7 +127,7 @@ def register(mcp):
         messages = results.get("messages", [])
 
         if not messages:
-            return {"emails": [], "message": "Inbox is empty."}
+            return {"emails": []}
 
         emails = []
         for msg in messages:
@@ -143,16 +140,15 @@ def register(mcp):
             headers = {h["name"]: h["value"] for h in detail["payload"]["headers"]}
             emails.append({
                 "id": msg["id"],
-                "subject": headers.get("Subject", "(no subject)"),
-                "from": headers.get("From", "unknown"),
-                "date": headers.get("Date", "unknown"),
-                "snippet": detail.get("snippet", ""),
+                "sub": headers.get("Subject", "")[:80],       # ← shorter key + truncated
+                "from": headers.get("From", "")[:50],          # ← truncated
+                "date": headers.get("Date", "")[:16],          # ← just date/time
+                "preview": detail.get("snippet", "")[:100],    # ← shorter key + truncated
             })
 
         response = {"emails": emails}
         if results.get("nextPageToken"):
             response["next_page_token"] = results["nextPageToken"]
-            response["hint"] = "More results available. Call list_emails again with this next_page_token."
         return response
 
     @mcp.tool()
@@ -171,8 +167,8 @@ def register(mcp):
             page_token: Pagination token from a previous result to get the next page.
 
         Returns:
-            Dict with 'emails' list (id, subject, from, date, snippet), the
-            'query' used, and optional 'next_page_token'.
+            Dict with 'emails' list (id, sub, from, date, preview) and
+            optional 'next_page_token'.
         """
         service = get_gmail_service()
         params = {"userId": "me", "q": query, "maxResults": max_results}
@@ -183,7 +179,7 @@ def register(mcp):
         messages = results.get("messages", [])
 
         if not messages:
-            return {"emails": [], "query": query, "message": f'No emails found for query: "{query}"'}
+            return {"emails": [], "query": query}
 
         emails = []
         for msg in messages:
@@ -196,20 +192,19 @@ def register(mcp):
             headers = {h["name"]: h["value"] for h in detail["payload"]["headers"]}
             emails.append({
                 "id": msg["id"],
-                "subject": headers.get("Subject", "(no subject)"),
-                "from": headers.get("From", "unknown"),
-                "date": headers.get("Date", "unknown"),
-                "snippet": detail.get("snippet", ""),
+                "sub": headers.get("Subject", "")[:80],       # ← shorter key + truncated
+                "from": headers.get("From", "")[:50],          # ← truncated
+                "date": headers.get("Date", "")[:16],          # ← just date/time
+                "preview": detail.get("snippet", "")[:100],    # ← shorter key + truncated
             })
 
         response = {"emails": emails, "query": query}
         if results.get("nextPageToken"):
             response["next_page_token"] = results["nextPageToken"]
-            response["hint"] = "More results available. Call search_emails again with this next_page_token."
         return response
 
     @mcp.tool()
-    def read_email(message_id: str) -> dict:
+    def read_email(message_id: str, max_chars: int = 500) -> dict:
         """Read the full content of a specific Gmail message by its id.
 
         Use list_emails or search_emails first to find message ids, then
@@ -217,10 +212,10 @@ def register(mcp):
 
         Args:
             message_id: The Gmail message id (e.g. "19525f8e8c0c8baa").
+            max_chars: Max characters of body to return (default 500, max 5000).
 
         Returns:
-            Dict with id, subject, from, to, date, body (full plain-text),
-            and snippet.
+            Dict with id, subject, from, to, date, and body.
         """
         service = get_gmail_service()
         try:
@@ -232,7 +227,6 @@ def register(mcp):
 
         headers = {h["name"]: h["value"] for h in detail["payload"].get("headers", [])}
 
-        # Extract plain-text body (handles simple and multipart)
         body = ""
         payload = detail["payload"]
         if "parts" in payload:
@@ -243,12 +237,15 @@ def register(mcp):
         elif payload.get("body", {}).get("data"):
             body = base64.urlsafe_b64decode(payload["body"]["data"]).decode("utf-8", errors="replace")
 
+        # ← cap max_chars at 5000 for safety
+        max_chars = min(max_chars, 5000)
+
+        # ← removed snippet (redundant with body), truncated body
         return {
             "id": message_id,
-            "subject": headers.get("Subject", "(no subject)"),
-            "from": headers.get("From", "unknown"),
-            "to": headers.get("To", "unknown"),
-            "date": headers.get("Date", "unknown"),
-            "body": body,
-            "snippet": detail.get("snippet", ""),
+            "sub": headers.get("Subject", "")[:80],
+            "from": headers.get("From", "")[:50],
+            "to": headers.get("To", "")[:50],
+            "date": headers.get("Date", "")[:16],
+            "body": body[:max_chars] + ("..." if len(body) > max_chars else ""),
         }
