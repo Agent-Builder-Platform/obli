@@ -38,11 +38,11 @@ export default function LoginPage() {
 
         <div>
           <h1 className="text-white text-5xl font-light leading-tight mb-6">
-            Build smarter.<br />
-            <span className="font-bold">Deploy faster.</span>
+            Your team's AI agents,<br />
+            <span className="font-bold">all in one place.</span>
           </h1>
           <p className="text-white/40 text-lg font-light max-w-sm leading-relaxed">
-            The internal AI agent platform — create, manage, and share intelligent agents across your organisation.
+            The internal platform for building, deploying, testing and sharing AI agents across your organisation without the chaos of everyone using different tools and fears of data misuse.
           </p>
         </div>
 

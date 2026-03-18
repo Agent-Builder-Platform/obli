@@ -38,7 +38,7 @@ function Hero() {
       <div className="max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 bg-base-200 text-base-content/60 text-xs font-medium uppercase tracking-widest px-4 py-2 rounded-full mb-10">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-          Now in closed beta
+          Now in development
         </div>
 
         <h1 className="text-6xl md:text-7xl font-light leading-[1.05] tracking-tight text-base-content mb-6">
