@@ -10,6 +10,7 @@ import {
   X,
   ChevronRight,
 } from 'lucide-react'
+import Logo from './Logo'
 
 const NAV_ITEMS = [
   { label: 'Your Agents', href: '/agents', icon: Bot },
@@ -31,9 +32,7 @@ export default function Layout({ children, title }) {
       {/* Logo */}
       <div className="px-6 py-6 border-b border-white/10">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-white rounded flex items-center justify-center">
-            <span className="text-black font-black text-sm tracking-tighter">O</span>
-          </div>
+          <Logo variant="light" size={28} />
           <span className="font-semibold text-lg tracking-tight">obli</span>
         </Link>
       </div>

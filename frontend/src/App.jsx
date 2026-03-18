@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
@@ -11,7 +12,7 @@ import ChatPage from './pages/ChatPage'
 import SystemPromptsPage from './pages/SystemPromptsPage'
 
 function PrivateRoute({ session, children }) {
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) return <Navigate to="/landing" replace />
   return children
 }
 
@@ -50,6 +51,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Public */}
+        <Route path="/landing" element={<LandingPage />} />
         <Route
           path="/login"
           element={
@@ -110,7 +112,7 @@ export default function App() {
         />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={session ? '/' : '/landing'} replace />} />
       </Routes>
     </BrowserRouter>
   )
