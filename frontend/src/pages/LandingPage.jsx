@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Zap, Users, Layers, Plug, FlaskConical } from 'lucide-react'
+import { api } from '../lib/api'
 
 
 function Navbar() {
@@ -33,6 +35,12 @@ function Navbar() {
 }
 
 function Hero() {
+  const [waitlistCount, setWaitlistCount] = useState(null)
+
+  useEffect(() => {
+    api.waitlist.count().then(setWaitlistCount)
+  }, [])
+
   return (
     <section className="pt-40 pb-28 px-6">
       <div className="max-w-4xl mx-auto text-center">
@@ -69,6 +77,16 @@ function Hero() {
             Sign in to workspace
           </Link>
         </div>
+{/* 
+        {waitlistCount !== null && (
+          <p className="mt-8 text-sm text-base-content/40">
+            Join the{' '}
+            <span className="font-semibold text-base-content/70">
+              {waitlistCount.toLocaleString()}
+            </span>{' '}
+            companies already on the waitlist
+          </p>
+        )} */}
       </div>
     </section>
   )
@@ -263,7 +281,7 @@ function Contact() {
           your use case, data requirements, and how we can help.
         </p>
         <a
-          href="mailto:hello@obli.ai"
+          href="mailto:infoatobli@gmail.com"
           className="btn btn-primary btn-lg gap-2 font-medium px-10"
         >
           infoatobli@gmail.com

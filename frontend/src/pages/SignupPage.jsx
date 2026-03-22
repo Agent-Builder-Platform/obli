@@ -1,46 +1,65 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CheckCircle, ArrowRight, Users, Building2 } from 'lucide-react'
+import { api } from '../lib/api'
+
+const USE_TYPES = [
+  { value: 'team', label: 'Team', icon: Users, desc: 'Small group or department' },
+  { value: 'enterprise', label: 'Enterprise', icon: Building2, desc: 'Company-wide rollout' },
+]
+
+const TEAM_SIZES = [
+  '2–5', '6–10', '11–25', '26–50', '51–100', '101–250', '250+'
+]
 
 export default function SignupPage() {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    role: '',
+    company: '',
+    reason: '',
+    use_type: '',
+    team_size: '',
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  async function handleSignup(e) {
+  function set(field) {
+    return (e) => setForm((f) => ({ ...f, [field]: e.target.value }))
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
+    if (!form.use_type) {
+      setError('Please select how you plan to use Obli')
       return
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+    if (!form.team_size) {
+      setError('Please select your team size')
       return
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-      },
-    })
-
-    if (error) {
-      setError(error.message)
-    } else {
+    try {
+      await api.waitlist.join({
+        name: form.name,
+        email: form.email,
+        role: form.role || undefined,
+        company: form.company || undefined,
+        reason: form.reason,
+        use_type: form.use_type,
+        team_size: form.team_size,
+      })
       setSuccess(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   if (success) {
@@ -50,13 +69,13 @@ export default function SignupPage() {
           <div className="flex justify-center mb-6">
             <CheckCircle size={48} className="text-success" strokeWidth={1.5} />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Check your email</h2>
+          <h2 className="text-2xl font-bold mb-2">You're on the list!</h2>
           <p className="text-base-content/50 text-sm mb-6">
-            We sent a confirmation link to <strong>{email}</strong>. Click it to
-            activate your account.
+            Thanks, <strong>{form.name.split(' ')[0]}</strong>! We'll reach out to{' '}
+            <strong>{form.email}</strong> when your spot is ready.
           </p>
-          <Link to="/login" className="btn btn-primary btn-sm gap-2">
-            Back to sign in
+          <Link to="/landing" className="btn btn-primary btn-sm gap-2">
+            Back to home
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -108,19 +127,39 @@ export default function SignupPage() {
           <span className="text-base-content font-semibold text-xl tracking-tight">obli</span>
         </div>
 
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-md">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-base-content mb-1">Create your account</h2>
-            <p className="text-base-content/50 text-sm">Get started with Obli today</p>
+            <h2 className="text-2xl font-bold text-base-content mb-1">Join the waitlist</h2>
+            <p className="text-base-content/50 text-sm">
+              Early access is limited. Tell us about yourself and we'll be in touch.
+            </p>
           </div>
 
-          <form onSubmit={handleSignup} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="alert alert-error py-3 text-sm">
                 <span>{error}</span>
               </div>
             )}
 
+            {/* Name */}
+            <div className="form-control">
+              <label className="label pb-1.5">
+                <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
+                  Full name
+                </span>
+              </label>
+              <input
+                type="text"
+                className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                placeholder="Jane Smith"
+                value={form.name}
+                onChange={set('name')}
+                required
+              />
+            </div>
+
+            {/* Email */}
             <div className="form-control">
               <label className="label pb-1.5">
                 <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
@@ -131,49 +170,107 @@ export default function SignupPage() {
                 type="email"
                 className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
                 placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={set('email')}
                 required
               />
             </div>
 
-            <div className="form-control">
-              <label className="label pb-1.5">
-                <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
-                  Password
-                </span>
-              </label>
-              <div className="relative">
+            {/* Role + Company */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="form-control">
+                <label className="label pb-1.5">
+                  <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
+                    Job title
+                  </span>
+                </label>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full pr-12"
-                  placeholder="Min. 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  type="text"
+                  className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                  placeholder="e.g. Product Manager"
+                  value={form.role}
+                  onChange={set('role')}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content transition-colors"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+              </div>
+
+              <div className="form-control">
+                <label className="label pb-1.5">
+                  <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
+                    Company
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                  placeholder="Acme Inc."
+                  value={form.company}
+                  onChange={set('company')}
+                />
               </div>
             </div>
 
+            {/* Use type */}
             <div className="form-control">
               <label className="label pb-1.5">
                 <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
-                  Confirm password
+                  How will you use Obli?
                 </span>
               </label>
-              <input
-                type="password"
-                className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
-                placeholder="Repeat password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+              <div className="grid grid-cols-2 gap-2 max-w-xs mx-auto w-full">
+                {USE_TYPES.map(({ value, label, icon: Icon, desc }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, use_type: value, team_size: '' }))}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer text-center ${
+                      form.use_type === value
+                        ? 'border-black bg-black text-white'
+                        : 'border-base-300 bg-base-100 hover:border-base-content/30'
+                    }`}
+                  >
+                    <Icon size={18} strokeWidth={1.5} />
+                    <span className="text-xs font-semibold">{label}</span>
+                    <span className={`text-[10px] leading-tight ${form.use_type === value ? 'text-white/60' : 'text-base-content/40'}`}>
+                      {desc}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Team size */}
+            <div className="form-control">
+              <label className="label pb-1.5">
+                <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
+                  Team size
+                </span>
+              </label>
+              <select
+                className="select select-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                value={form.team_size}
+                onChange={set('team_size')}
+                required
+              >
+                <option value="" disabled>Select team size</option>
+                {TEAM_SIZES.map((s) => (
+                  <option key={s} value={s}>{s} people</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Reason */}
+            <div className="form-control">
+              <label className="label pb-1.5">
+                <span className="label-text text-xs font-medium uppercase tracking-wider text-base-content/50">
+                  Why do you want to use Obli?
+                </span>
+              </label>
+              <textarea
+                className="textarea textarea-bordered bg-base-100 focus:border-black focus:outline-none w-full resize-none"
+                placeholder="Tell us what you're trying to build or solve..."
+                rows={3}
+                value={form.reason}
+                onChange={set('reason')}
                 required
               />
             </div>
@@ -181,13 +278,13 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary w-full mt-2 gap-2 font-medium"
+              className="btn btn-primary w-full gap-2 font-medium"
             >
               {loading ? (
                 <span className="loading loading-spinner loading-sm" />
               ) : (
                 <>
-                  Create account
+                  Join the waitlist
                   <ArrowRight size={16} />
                 </>
               )}

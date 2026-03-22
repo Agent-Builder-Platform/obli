@@ -6,7 +6,7 @@ import time
 
 load_dotenv()
 
-from routers import agents, models, prompts, chat
+from routers import agents, models, prompts, chat, waitlist
 
 app = FastAPI(
     title="Obli API",
@@ -26,6 +26,7 @@ app.include_router(agents.router, prefix="/api/agents", tags=["Agents"])
 app.include_router(models.router, prefix="/api/models", tags=["Models"])
 app.include_router(prompts.router, prefix="/api/prompts", tags=["System Prompts"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
+app.include_router(waitlist.router, prefix="/api/waitlist", tags=["Waitlist"])
 
 
 @app.get("/api/health", tags=["Health"])

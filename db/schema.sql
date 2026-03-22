@@ -105,6 +105,24 @@ CREATE POLICY "conversations_all" ON conversations
   FOR ALL USING (user_id = auth.uid());
 
 -- ────────────────────────────────────────────────────────────
+-- WAITLIST
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE waitlist (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name        TEXT NOT NULL,
+  email       TEXT NOT NULL UNIQUE,
+  role        TEXT,
+  company     TEXT,
+  reason      TEXT NOT NULL,
+  use_type    TEXT NOT NULL CHECK (use_type IN ('personal', 'team', 'enterprise')),
+  team_size   TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Only the service role (backend) can insert/read; no direct client access
+ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
+
+-- ────────────────────────────────────────────────────────────
 -- SEED DEFAULT SYSTEM PROMPTS
 -- ────────────────────────────────────────────────────────────
 -- Run db/seed_defaults.py to insert the default system prompts.

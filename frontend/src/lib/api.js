@@ -55,6 +55,27 @@ export const api = {
     delete: (id) => apiFetch(`/api/prompts/${id}`, { method: 'DELETE' }),
   },
 
+  // ── Waitlist ──────────────────────────────────────────────
+  waitlist: {
+    join: (data) =>
+      fetch(`${API_BASE}/api/waitlist/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }))
+          throw new Error(err.detail ?? 'Request failed')
+        }
+        return res.json()
+      }),
+    count: () =>
+      fetch(`${API_BASE}/api/waitlist/count`)
+        .then((res) => res.json())
+        .then((data) => data.count ?? 0)
+        .catch(() => null),
+  },
+
   // ── Chat ──────────────────────────────────────────────────
   chat: {
     send: (data) =>
