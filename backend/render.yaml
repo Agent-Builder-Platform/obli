@@ -1,8 +1,11 @@
 services:
   - type: web
     name: obli-core-backend
-    runtime: python3.12
+    runtime: python
     region: oregon
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app
+    envVars:
+  - key: PYTHON_VERSION
+    value: 3.12.9
