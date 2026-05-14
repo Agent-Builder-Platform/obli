@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: obli-agent-builder-frontend-prod
+    runtime: node
+    region: oregon
+    plan: free
+    branch: prod
+    buildCommand: npm install && npm run build
+    startCommand: npm run prod
+    envVars:
+      - key: NODE_ENV
+        value: production
