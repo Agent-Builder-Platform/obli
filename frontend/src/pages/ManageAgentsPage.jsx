@@ -99,7 +99,7 @@ export default function ManageAgentsPage() {
             <input
               type="text"
               placeholder="Search agents..."
-              className="input input-bordered w-full sm:max-w-xs pl-10 bg-white focus:border-black focus:outline-none"
+              className="input input-bordered w-full sm:max-w-xs pl-10 bg-white focus:border-primary focus:outline-none"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

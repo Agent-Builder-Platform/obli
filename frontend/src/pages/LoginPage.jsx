@@ -30,10 +30,8 @@ export default function LoginPage() {
       {/* Left panel — branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-black flex-col justify-between p-12">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <span className="text-black font-black text-base tracking-tighter">O</span>
-          </div>
-          <span className="text-white font-semibold text-xl tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-9 h-9 object-contain rounded" />
+          <span className="text-white font-semibold text-xl tracking-tight">Obli.</span>
         </div>
 
         <div>
@@ -68,10 +66,8 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-12">
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-2 mb-10">
-          <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-            <span className="text-white font-black text-base tracking-tighter">O</span>
-          </div>
-          <span className="text-base-content font-semibold text-xl tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-9 h-9 object-contain" />
+          <span className="text-base-content font-semibold text-xl tracking-tight">Obli.</span>
         </div>
 
         <div className="w-full max-w-sm">
@@ -95,7 +91,7 @@ export default function LoginPage() {
               </label>
               <input
                 type="email"
-                className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                className="input input-bordered bg-base-100 focus:border-primary focus:outline-none w-full"
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -113,7 +109,7 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full pr-12"
+                  className="input input-bordered bg-base-100 focus:border-primary focus:outline-none w-full pr-12"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

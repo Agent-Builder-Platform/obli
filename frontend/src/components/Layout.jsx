@@ -3,11 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import {
   Bot,
-  MessageSquare,
   FileText,
+  FlaskConical,
   LogOut,
   Menu,
-  X,
   ChevronRight,
 } from 'lucide-react'
 import Logo from './Logo'
@@ -15,6 +14,7 @@ import Logo from './Logo'
 const NAV_ITEMS = [
   { label: 'Your Agents', href: '/agents', icon: Bot },
   { label: 'System Prompt Library', href: '/prompts', icon: FileText },
+  // { label: 'Testing', href: '/testing', icon: FlaskConical, comingSoon: true },
 ]
 
 export default function Layout({ children, title }) {
@@ -32,10 +32,8 @@ export default function Layout({ children, title }) {
       {/* Logo */}
       <div className="px-6 py-6 border-b border-white/10">
         <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-white rounded flex items-center justify-center">
-            <span className="text-black font-black text-sm tracking-tighter">O</span>
-          </div>
-          <span className="font-semibold text-lg tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-8 h-8 object-contain rounded" />
+          <span className="font-semibold text-lg tracking-tight">Obli.</span>
         </Link>
       </div>
 
@@ -118,7 +116,7 @@ export default function Layout({ children, title }) {
           </button>
 
           <div className="flex items-center gap-2 text-sm text-base-content/40">
-            <span>obli</span>
+            <span>Obli.</span>
             <ChevronRight size={14} />
             <span className="text-base-content font-medium">{title}</span>
           </div>

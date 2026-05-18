@@ -322,7 +322,7 @@ export default function ChatPage() {
           >
             <textarea
               ref={inputRef}
-              className="flex-1 textarea textarea-bordered bg-base-50 focus:border-black focus:outline-none resize-none min-h-[44px] max-h-36 py-3 text-sm leading-relaxed"
+              className="flex-1 textarea textarea-bordered bg-base-50 focus:border-primary focus:outline-none resize-none min-h-[44px] max-h-36 py-3 text-sm leading-relaxed"
               placeholder={`Message ${agent?.name ?? 'agent'}...`}
               value={input}
               onChange={(e) => setInput(e.target.value)}

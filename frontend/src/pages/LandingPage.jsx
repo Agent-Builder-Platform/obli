@@ -9,10 +9,8 @@ function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-base-200">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-black rounded flex items-center justify-center">
-            <span className="text-white font-black text-sm tracking-tighter">O</span>
-          </div>
-          <span className="font-semibold text-xl tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-8 h-8 object-contain" />
+          <span className="font-semibold text-xl tracking-tight">Obli.</span>
         </div>
         <div className="flex items-center gap-3">
           <Link
@@ -199,6 +197,7 @@ function Features() {
       title: 'Pre-built testing and evalution for every agent',
       description:
         'Deploy AI agents with confidence with thorough testing and evaluations from the first day the agent is created.',
+      comingSoon: true,
     },
 
   ]
@@ -217,9 +216,14 @@ function Features() {
           {features.map((f) => (
             <div
               key={f.title}
-              className="rounded-2xl border border-base-200 p-8 bg-base-100 hover:border-base-300 transition-colors"
+              className="rounded-2xl border border-base-200 p-8 bg-base-100 hover:border-base-300 transition-colors relative"
             >
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-white mb-5">
+              {f.comingSoon && (
+                <span className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-widest text-primary border border-primary/30 bg-primary/5 px-2 py-0.5 rounded-full">
+                  Coming soon
+                </span>
+              )}
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white mb-5">
                 {f.icon}
               </div>
               <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
@@ -256,7 +260,7 @@ function HowItWorks() {
                 <div className="hidden md:block absolute top-5 left-full w-full h-px bg-base-300 -translate-x-4 z-0" />
               )}
               <div className="relative z-10">
-                <p className="text-5xl font-black text-base-content/10 mb-4">{step.number}</p>
+                <p className="text-5xl font-black text-primary/20 mb-4">{step.number}</p>
                 <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
                 <p className="text-base-content/50 text-sm leading-relaxed">{step.body}</p>
               </div>
@@ -281,10 +285,10 @@ function Contact() {
           your use case, data requirements, and how we can help.
         </p>
         <a
-          href="mailto:infoatobli@gmail.com"
+          href="mailto:hello@obli.co.nz"
           className="btn btn-primary btn-lg gap-2 font-medium px-10"
         >
-          infoatobli@gmail.com
+          hello@obli.co.nz
           <ArrowRight size={18} />
         </a>
       </div>
@@ -309,10 +313,8 @@ function Footer() {
     <footer className="border-t border-base-200 py-10 px-6">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-            <span className="text-white font-black text-xs tracking-tighter">O</span>
-          </div>
-          <span className="font-semibold tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-7 h-7 object-contain" />
+          <span className="font-semibold tracking-tight">Obli.</span>
         </div>
         <p className="text-base-content/30 text-sm">
           © {new Date().getFullYear()} Obli. All rights reserved.
@@ -332,7 +334,6 @@ export default function LandingPage() {
         <Features />
         <HowItWorks />
         <Contact />
-        <CTA />
       </main>
       <Footer />
     </div>

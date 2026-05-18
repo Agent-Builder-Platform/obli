@@ -86,7 +86,7 @@ export default function DashboardPage() {
               href: '/prompts',
             },
             {
-              label: 'Tool Marketplace',
+              label: 'Knowledge Base',
               value: 'Coming soon',
               icon: MessageSquare,
               href: '#',
@@ -102,7 +102,7 @@ export default function DashboardPage() {
                   card.muted ? 'opacity-60 pointer-events-none' : ''
                 }`}
               >
-                <div className="w-10 h-10 bg-base-200 rounded-lg flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all">
+                <div className="w-10 h-10 bg-base-200 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
                   <Icon size={18} strokeWidth={1.5} />
                 </div>
                 <div>

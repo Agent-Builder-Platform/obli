@@ -131,7 +131,7 @@ export default function CreateAgentPage() {
               </label>
               <input
                 type="text"
-                className="input input-bordered bg-white focus:border-black focus:outline-none w-full"
+                className="input input-bordered bg-white focus:border-primary focus:outline-none w-full"
                 placeholder="e.g. Customer Support Agent"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -149,7 +149,7 @@ export default function CreateAgentPage() {
                 <span className="label-text-alt text-base-content/30">Optional</span>
               </label>
               <textarea
-                className="textarea textarea-bordered bg-white focus:border-black focus:outline-none w-full resize-none"
+                className="textarea textarea-bordered bg-white focus:border-primary focus:outline-none w-full resize-none"
                 placeholder="What does this agent do?"
                 rows={3}
                 value={description}
@@ -181,8 +181,8 @@ export default function CreateAgentPage() {
                           className={`text-left p-3 rounded-lg border text-sm transition-all
                             ${
                               selectedModel === model.id
-                                ? 'border-black bg-black text-white'
-                                : 'border-base-300 bg-white hover:border-black/40'
+                                ? 'border-primary bg-primary text-white'
+                                : 'border-base-300 bg-white hover:border-primary/40'
                             }`}
                         >
                           <div className="flex items-center justify-between mb-0.5">
@@ -194,7 +194,7 @@ export default function CreateAgentPage() {
                           <p
                             className={`text-xs leading-relaxed ${
                               selectedModel === model.id
-                                ? 'text-white/60'
+                                ? 'text-primary-content/70'
                                 : 'text-base-content/40'
                             }`}
                           >
@@ -233,7 +233,7 @@ export default function CreateAgentPage() {
                   <button
                     type="button"
                     onClick={() => setPromptDropdownOpen(!promptDropdownOpen)}
-                    className="input input-bordered bg-white w-full text-left flex items-center justify-between focus:border-black focus:outline-none"
+                    className="input input-bordered bg-white w-full text-left flex items-center justify-between focus:border-primary focus:outline-none"
                   >
                     <span className="text-sm text-base-content/60">
                       {selectedPromptIds.length === 0
@@ -266,7 +266,7 @@ export default function CreateAgentPage() {
                                 className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all
                                   ${
                                     isSelected
-                                      ? 'bg-black border-black'
+                                      ? 'bg-primary border-primary'
                                       : 'border-base-300'
                                   }`}
                               >
@@ -295,7 +295,7 @@ export default function CreateAgentPage() {
                   {selectedPromptsData.map((p) => (
                     <span
                       key={p.id}
-                      className="flex items-center gap-1.5 bg-black text-white text-xs px-2.5 py-1 rounded-full"
+                      className="flex items-center gap-1.5 bg-primary text-white text-xs px-2.5 py-1 rounded-full"
                     >
                       {p.name}
                       <button
@@ -331,8 +331,8 @@ export default function CreateAgentPage() {
                     className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all
                       ${
                         visibility === opt.value
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white border-base-300 text-base-content/60 hover:border-black/40'
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-white border-base-300 text-base-content/60 hover:border-primary/40'
                       }`}
                   >
                     {opt.label}

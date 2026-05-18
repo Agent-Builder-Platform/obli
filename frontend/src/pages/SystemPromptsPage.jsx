@@ -71,7 +71,7 @@ function PromptModal({ prompt, onClose, onSave }) {
             </label>
             <input
               type="text"
-              className="input input-bordered bg-white focus:border-black focus:outline-none w-full"
+              className="input input-bordered bg-white focus:border-primary focus:outline-none w-full"
               placeholder="e.g. Formal Tone"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -87,7 +87,7 @@ function PromptModal({ prompt, onClose, onSave }) {
               </span>
             </label>
             <textarea
-              className="textarea textarea-bordered bg-white focus:border-black focus:outline-none w-full resize-none font-mono text-sm"
+              className="textarea textarea-bordered bg-white focus:border-primary focus:outline-none w-full resize-none font-mono text-sm"
               placeholder="You are a helpful assistant that..."
               rows={8}
               value={content}
@@ -116,8 +116,8 @@ function PromptModal({ prompt, onClose, onSave }) {
                   className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all
                     ${
                       visibility === opt.value
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white border-base-300 text-base-content/60 hover:border-black/40'
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-white border-base-300 text-base-content/60 hover:border-primary/40'
                     }`}
                 >
                   {opt.label}

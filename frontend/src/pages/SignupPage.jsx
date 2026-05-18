@@ -88,10 +88,8 @@ export default function SignupPage() {
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-black flex-col justify-between p-12">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <span className="text-black font-black text-base tracking-tighter">O</span>
-          </div>
-          <span className="text-white font-semibold text-xl tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-9 h-9 object-contain rounded" />
+          <span className="text-white font-semibold text-xl tracking-tight">Obli.</span>
         </div>
 
         <div>
@@ -121,10 +119,8 @@ export default function SignupPage() {
       {/* Right panel */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-12">
         <div className="lg:hidden flex items-center gap-2 mb-10">
-          <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-            <span className="text-white font-black text-base tracking-tighter">O</span>
-          </div>
-          <span className="text-base-content font-semibold text-xl tracking-tight">obli</span>
+          <img src="/logo.png" alt="" className="w-9 h-9 object-contain" />
+          <span className="text-base-content font-semibold text-xl tracking-tight">Obli.</span>
         </div>
 
         <div className="w-full max-w-md">
@@ -151,7 +147,7 @@ export default function SignupPage() {
               </label>
               <input
                 type="text"
-                className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                className="input input-bordered bg-base-100 focus:border-primary focus:outline-none w-full"
                 placeholder="Jane Smith"
                 value={form.name}
                 onChange={set('name')}
@@ -168,7 +164,7 @@ export default function SignupPage() {
               </label>
               <input
                 type="email"
-                className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                className="input input-bordered bg-base-100 focus:border-primary focus:outline-none w-full"
                 placeholder="you@company.com"
                 value={form.email}
                 onChange={set('email')}
@@ -186,7 +182,7 @@ export default function SignupPage() {
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                  className="input input-bordered bg-base-100 focus:border-primary focus:outline-none w-full"
                   placeholder="e.g. Product Manager"
                   value={form.role}
                   onChange={set('role')}
@@ -201,7 +197,7 @@ export default function SignupPage() {
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                  className="input input-bordered bg-base-100 focus:border-primary focus:outline-none w-full"
                   placeholder="Acme Inc."
                   value={form.company}
                   onChange={set('company')}
@@ -224,13 +220,13 @@ export default function SignupPage() {
                     onClick={() => setForm((f) => ({ ...f, use_type: value, team_size: '' }))}
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer text-center ${
                       form.use_type === value
-                        ? 'border-black bg-black text-white'
-                        : 'border-base-300 bg-base-100 hover:border-base-content/30'
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-base-300 bg-base-100 hover:border-primary/40'
                     }`}
                   >
                     <Icon size={18} strokeWidth={1.5} />
                     <span className="text-xs font-semibold">{label}</span>
-                    <span className={`text-[10px] leading-tight ${form.use_type === value ? 'text-white/60' : 'text-base-content/40'}`}>
+                    <span className={`text-[10px] leading-tight ${form.use_type === value ? 'text-primary-content/70' : 'text-base-content/40'}`}>
                       {desc}
                     </span>
                   </button>
@@ -246,7 +242,7 @@ export default function SignupPage() {
                 </span>
               </label>
               <select
-                className="select select-bordered bg-base-100 focus:border-black focus:outline-none w-full"
+                className="select select-bordered bg-base-100 focus:border-primary focus:outline-none w-full"
                 value={form.team_size}
                 onChange={set('team_size')}
                 required
@@ -266,7 +262,7 @@ export default function SignupPage() {
                 </span>
               </label>
               <textarea
-                className="textarea textarea-bordered bg-base-100 focus:border-black focus:outline-none w-full resize-none"
+                className="textarea textarea-bordered bg-base-100 focus:border-primary focus:outline-none w-full resize-none"
                 placeholder="Tell us what you're trying to build or solve..."
                 rows={3}
                 value={form.reason}
