@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        sans: ['Newsreader', 'Charter', 'Iowan Old Style', 'Georgia', 'serif'],
+        serif: ['Newsreader', 'Charter', 'Georgia', 'serif'],
         mono: ['DM Mono', 'monospace'],
       },
     },

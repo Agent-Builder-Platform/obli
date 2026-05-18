@@ -4,6 +4,9 @@ from typing import List, Optional
 from middleware.auth import get_current_user
 from services.supabase_client import supabase
 from services.ai_providers import chat_completion
+from services.knowledge_base import retrieve_context
+
+RAG_TOP_K = 4
 
 router = APIRouter()
 
@@ -42,18 +45,69 @@ async def send_message(
     if agent["user_id"] != user_id and agent["visibility"] == "private":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Build system prompt from active prompts attached to agent
-    combined_system_prompt: Optional[str] = None
-    if agent.get("system_prompt_ids"):
+    # Resolve the single system prompt attached to the agent (if any).
+    user_system_prompt: Optional[str] = None
+    if agent.get("system_prompt_id"):
         sp_res = (
             supabase.table("system_prompts")
             .select("content, is_active, name")
-            .in_("id", agent["system_prompt_ids"])
+            .eq("id", agent["system_prompt_id"])
+            .limit(1)
             .execute()
         )
-        active = [p["content"] for p in sp_res.data if p.get("is_active")]
-        if active:
-            combined_system_prompt = "\n\n---\n\n".join(active)
+        if sp_res.data and sp_res.data[0].get("is_active"):
+            user_system_prompt = sp_res.data[0]["content"]
+
+    # RAG: pull relevant chunks from the agent's knowledge bases based on the
+    # latest user message.
+    kb_ids = agent.get("knowledge_base_ids") or []
+    last_user_msg = next(
+        (m.content for m in reversed(request.messages) if m.role == "user"), None
+    )
+    context_block: Optional[str] = None
+    print(
+        f"[chat] agent={agent['id']} kb_ids={kb_ids} "
+        f"has_user_msg={bool(last_user_msg)}"
+    )
+    if kb_ids and last_user_msg:
+        try:
+            chunks = retrieve_context(
+                knowledge_base_ids=kb_ids,
+                query=last_user_msg,
+                top_k=RAG_TOP_K,
+            )
+            print(
+                f"[chat] retrieved {len(chunks)} chunks from "
+                f"{len(kb_ids)} knowledge base(s)"
+            )
+            if chunks:
+                rendered = []
+                for i, c in enumerate(chunks, start=1):
+                    label = (
+                        f"{c['filename']} (v{c['version']})"
+                        if c.get("filename")
+                        else f"source #{i}"
+                    )
+                    rendered.append(f"[{i}] {label}\n{c['text'].strip()}")
+                context_block = "\n\n".join(rendered)
+        except Exception as e:
+            # Retrieval failures should never block the chat.
+            print(f"[chat] RAG retrieval failed: {e}")
+
+    # Compose the final system prompt: user's prompt + retrieved context.
+    parts: list[str] = []
+    if user_system_prompt:
+        parts.append(user_system_prompt)
+    if context_block:
+        parts.append(
+            "You have access to the following passages from the user's knowledge "
+            "base. Use them when relevant and cite the source by its filename. "
+            "If the answer isn't in the passages, say so rather than guessing.\n\n"
+            f"{context_block}"
+        )
+    final_system_prompt: Optional[str] = (
+        "\n\n---\n\n".join(parts) if parts else None
+    )
 
     # Format messages for the AI provider
     messages = [{"role": m.role, "content": m.content} for m in request.messages]
@@ -63,7 +117,7 @@ async def send_message(
         reply = await chat_completion(
             model_id=agent["model"],
             messages=messages,
-            system_prompt=combined_system_prompt,
+            system_prompt=final_system_prompt,
         )
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"AI provider error: {str(e)}")

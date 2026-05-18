@@ -13,7 +13,8 @@ class AgentCreate(BaseModel):
     name: str
     model: str
     description: Optional[str] = None
-    system_prompt_ids: List[str] = []
+    system_prompt_id: Optional[str] = None
+    knowledge_base_ids: List[str] = []
     visibility: str = "private"
 
 
@@ -21,7 +22,8 @@ class AgentUpdate(BaseModel):
     name: Optional[str] = None
     model: Optional[str] = None
     description: Optional[str] = None
-    system_prompt_ids: Optional[List[str]] = None
+    system_prompt_id: Optional[str] = None
+    knowledge_base_ids: Optional[List[str]] = None
     visibility: Optional[str] = None
 
 
@@ -50,7 +52,8 @@ async def create_agent(agent: AgentCreate, current_user: dict = Depends(get_curr
         "name": agent.name,
         "model": agent.model,
         "description": agent.description,
-        "system_prompt_ids": agent.system_prompt_ids,
+        "system_prompt_id": agent.system_prompt_id,
+        "knowledge_base_ids": agent.knowledge_base_ids,
         "visibility": agent.visibility,
     }
     response = supabase.table("agents").insert(data).execute()
@@ -73,18 +76,35 @@ async def get_agent(agent_id: str, current_user: dict = Depends(get_current_user
     if agent["user_id"] != user_id and agent["visibility"] == "private":
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Hydrate system prompts
-    system_prompts = []
-    if agent.get("system_prompt_ids"):
+    # Hydrate system prompt (single)
+    system_prompt = None
+    if agent.get("system_prompt_id"):
         sp_response = (
             supabase.table("system_prompts")
             .select("*")
-            .in_("id", agent["system_prompt_ids"])
+            .eq("id", agent["system_prompt_id"])
+            .limit(1)
             .execute()
         )
-        system_prompts = sp_response.data
+        if sp_response.data:
+            system_prompt = sp_response.data[0]
 
-    return {"agent": agent, "system_prompts": system_prompts}
+    # Hydrate knowledge bases
+    knowledge_bases = []
+    if agent.get("knowledge_base_ids"):
+        kb_response = (
+            supabase.table("knowledge_bases")
+            .select("*")
+            .in_("id", agent["knowledge_base_ids"])
+            .execute()
+        )
+        knowledge_bases = kb_response.data
+
+    return {
+        "agent": agent,
+        "system_prompt": system_prompt,
+        "knowledge_bases": knowledge_bases,
+    }
 
 
 @router.put("/{agent_id}")
@@ -95,7 +115,8 @@ async def update_agent(
 ):
     """Update an agent."""
     user_id = current_user["sub"]
-    update_data = {k: v for k, v in agent.model_dump().items() if v is not None}
+    # exclude_unset preserves explicit None (so users can clear system_prompt_id)
+    update_data = agent.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(status_code=400, detail="No update fields provided")
 

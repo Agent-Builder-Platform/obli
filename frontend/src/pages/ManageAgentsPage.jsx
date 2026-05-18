@@ -191,13 +191,16 @@ export default function ManageAgentsPage() {
                     </span>
                   </div>
 
-                  {/* System prompts count */}
-                  {(agent.system_prompt_ids ?? []).length > 0 && (
-                    <p className="text-xs text-base-content/40">
-                      {agent.system_prompt_ids.length} system prompt
-                      {agent.system_prompt_ids.length !== 1 ? 's' : ''}
-                    </p>
-                  )}
+                  {/* Attachments */}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-base-content/40">
+                    {agent.system_prompt_id && <span>1 system prompt</span>}
+                    {(agent.knowledge_base_ids ?? []).length > 0 && (
+                      <span>
+                        {agent.knowledge_base_ids.length} knowledge base
+                        {agent.knowledge_base_ids.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Action */}
                   <button

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import Layout from '../components/Layout'
-import { ArrowLeft, Plus, X, Check, ChevronDown, Bot } from 'lucide-react'
+import { ArrowLeft, X, Check, ChevronDown, Bot, Database } from 'lucide-react'
 
 const PROVIDER_LABELS = {
   anthropic: 'Anthropic',
@@ -17,30 +17,35 @@ export default function CreateAgentPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [selectedModel, setSelectedModel] = useState('')
-  const [selectedPromptIds, setSelectedPromptIds] = useState([])
+  const [selectedPromptId, setSelectedPromptId] = useState(null)
+  const [selectedKbIds, setSelectedKbIds] = useState([])
   const [visibility, setVisibility] = useState('private')
 
   // Data
   const [models, setModels] = useState([])
   const [groupedModels, setGroupedModels] = useState({})
   const [prompts, setPrompts] = useState([])
+  const [knowledgeBases, setKnowledgeBases] = useState([])
 
   // UI
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState('')
   const [promptDropdownOpen, setPromptDropdownOpen] = useState(false)
+  const [kbDropdownOpen, setKbDropdownOpen] = useState(false)
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [modelsRes, promptsRes] = await Promise.all([
+        const [modelsRes, promptsRes, kbRes] = await Promise.all([
           api.models.list(),
           api.prompts.list(),
+          api.knowledge.listBases(),
         ])
         setModels(modelsRes.models ?? [])
         setGroupedModels(modelsRes.grouped ?? {})
         setPrompts(promptsRes.prompts ?? [])
+        setKnowledgeBases(kbRes.knowledge_bases ?? [])
 
         // Select first model by default
         if (modelsRes.models?.length > 0) {
@@ -54,9 +59,15 @@ export default function CreateAgentPage() {
     loadData()
   }, [])
 
-  function togglePrompt(id) {
-    setSelectedPromptIds((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+  function selectPrompt(id) {
+    // toggle: clicking the active prompt unsets it
+    setSelectedPromptId((prev) => (prev === id ? null : id))
+    setPromptDropdownOpen(false)
+  }
+
+  function toggleKb(id) {
+    setSelectedKbIds((prev) =>
+      prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]
     )
   }
 
@@ -79,7 +90,8 @@ export default function CreateAgentPage() {
         name: name.trim(),
         description: description.trim() || null,
         model: selectedModel,
-        system_prompt_ids: selectedPromptIds,
+        system_prompt_id: selectedPromptId,
+        knowledge_base_ids: selectedKbIds,
         visibility,
       })
       navigate(`/agents/${res.agent.id}/chat`)
@@ -89,7 +101,8 @@ export default function CreateAgentPage() {
     setLoading(false)
   }
 
-  const selectedPromptsData = prompts.filter((p) => selectedPromptIds.includes(p.id))
+  const selectedPromptData = prompts.find((p) => p.id === selectedPromptId) ?? null
+  const selectedKbsData = knowledgeBases.filter((k) => selectedKbIds.includes(k.id))
 
   return (
     <Layout title="Create Agent">
@@ -208,11 +221,11 @@ export default function CreateAgentPage() {
               </div>
             </div>
 
-            {/* System Prompts */}
+            {/* System Prompt */}
             <div className="form-control">
               <label className="label pb-1.5">
                 <span className="label-text text-xs font-semibold uppercase tracking-wider text-base-content/50">
-                  System Prompts
+                  System Prompt
                 </span>
                 <span className="label-text-alt text-base-content/30">Optional</span>
               </label>
@@ -235,14 +248,18 @@ export default function CreateAgentPage() {
                     onClick={() => setPromptDropdownOpen(!promptDropdownOpen)}
                     className="input input-bordered bg-white w-full text-left flex items-center justify-between focus:border-primary focus:outline-none"
                   >
-                    <span className="text-sm text-base-content/60">
-                      {selectedPromptIds.length === 0
-                        ? 'Select system prompts...'
-                        : `${selectedPromptIds.length} selected`}
+                    <span
+                      className={`text-sm truncate ${
+                        selectedPromptData ? 'text-base-content' : 'text-base-content/60'
+                      }`}
+                    >
+                      {selectedPromptData
+                        ? selectedPromptData.name
+                        : 'Select a system prompt...'}
                     </span>
                     <ChevronDown
                       size={14}
-                      className={`text-base-content/40 transition-transform ${
+                      className={`text-base-content/40 transition-transform shrink-0 ml-2 ${
                         promptDropdownOpen ? 'rotate-180' : ''
                       }`}
                     />
@@ -251,19 +268,27 @@ export default function CreateAgentPage() {
                   {promptDropdownOpen && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-base-300 rounded-lg shadow-lg overflow-hidden">
                       <div className="max-h-52 overflow-y-auto scrollbar-thin">
+                        <button
+                          type="button"
+                          onClick={() => selectPrompt(null)}
+                          className={`w-full text-left px-4 py-3 hover:bg-base-100 transition-colors text-sm border-b border-base-200
+                            ${selectedPromptId === null ? 'bg-base-100' : ''}`}
+                        >
+                          <span className="text-base-content/50 italic">None</span>
+                        </button>
                         {prompts.map((prompt) => {
-                          const isSelected = selectedPromptIds.includes(prompt.id)
+                          const isSelected = selectedPromptId === prompt.id
                           return (
                             <button
                               key={prompt.id}
                               type="button"
-                              onClick={() => togglePrompt(prompt.id)}
+                              onClick={() => selectPrompt(prompt.id)}
                               className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-base-100 transition-colors text-sm border-b border-base-200 last:border-0
                                 ${isSelected ? 'bg-base-100' : ''}
                               `}
                             >
                               <div
-                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all
                                   ${
                                     isSelected
                                       ? 'bg-primary border-primary'
@@ -289,18 +314,122 @@ export default function CreateAgentPage() {
                 </div>
               )}
 
-              {/* Selected chips */}
-              {selectedPromptsData.length > 0 && (
+              {selectedPromptData && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedPromptsData.map((p) => (
+                  <span className="flex items-center gap-1.5 bg-primary text-white text-xs px-2.5 py-1 rounded-full">
+                    {selectedPromptData.name}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPromptId(null)}
+                      className="hover:opacity-70 transition-opacity"
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Knowledge Bases */}
+            <div className="form-control">
+              <label className="label pb-1.5">
+                <span className="label-text text-xs font-semibold uppercase tracking-wider text-base-content/50">
+                  Knowledge Bases
+                </span>
+                <span className="label-text-alt text-base-content/30">Optional</span>
+              </label>
+
+              {knowledgeBases.length === 0 ? (
+                <div className="text-sm text-base-content/40 border border-dashed border-base-300 rounded-lg p-4 text-center">
+                  No knowledge bases yet.{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/knowledge')}
+                    className="underline hover:text-base-content transition-colors"
+                  >
+                    Create one first
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setKbDropdownOpen(!kbDropdownOpen)}
+                    className="input input-bordered bg-white w-full text-left flex items-center justify-between focus:border-primary focus:outline-none"
+                  >
+                    <span className="text-sm text-base-content/60">
+                      {selectedKbIds.length === 0
+                        ? 'Select knowledge bases...'
+                        : `${selectedKbIds.length} selected`}
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      className={`text-base-content/40 transition-transform ${
+                        kbDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {kbDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-base-300 rounded-lg shadow-lg overflow-hidden">
+                      <div className="max-h-52 overflow-y-auto scrollbar-thin">
+                        {knowledgeBases.map((kb) => {
+                          const isSelected = selectedKbIds.includes(kb.id)
+                          return (
+                            <button
+                              key={kb.id}
+                              type="button"
+                              onClick={() => toggleKb(kb.id)}
+                              className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-base-100 transition-colors text-sm border-b border-base-200 last:border-0
+                                ${isSelected ? 'bg-base-100' : ''}
+                              `}
+                            >
+                              <div
+                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all
+                                  ${
+                                    isSelected
+                                      ? 'bg-primary border-primary'
+                                      : 'border-base-300'
+                                  }`}
+                              >
+                                {isSelected && (
+                                  <Check size={10} strokeWidth={3} className="text-white" />
+                                )}
+                              </div>
+                              <Database
+                                size={14}
+                                className="text-base-content/40 shrink-0"
+                                strokeWidth={1.75}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <span className="font-medium truncate block">{kb.name}</span>
+                                <span className="text-xs text-base-content/40 truncate block">
+                                  {kb.document_count} document
+                                  {kb.document_count === 1 ? '' : 's'}
+                                  {kb.description ? ` • ${kb.description}` : ''}
+                                </span>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedKbsData.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedKbsData.map((kb) => (
                     <span
-                      key={p.id}
+                      key={kb.id}
                       className="flex items-center gap-1.5 bg-primary text-white text-xs px-2.5 py-1 rounded-full"
                     >
-                      {p.name}
+                      <Database size={11} strokeWidth={2} />
+                      {kb.name}
                       <button
                         type="button"
-                        onClick={() => togglePrompt(p.id)}
+                        onClick={() => toggleKb(kb.id)}
                         className="hover:opacity-70 transition-opacity"
                       >
                         <X size={11} />

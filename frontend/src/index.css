@@ -8,13 +8,20 @@
   }
 
   html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Newsreader', Charter, 'Iowan Old Style', Georgia, serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga', 'kern';
+  }
+
+  body {
+    font-size: 15px;
+    line-height: 1.55;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Newsreader', Charter, 'Iowan Old Style', Georgia, serif;
+    letter-spacing: -0.015em;
   }
 
   code, pre, .font-mono {

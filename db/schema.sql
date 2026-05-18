@@ -23,15 +23,16 @@ CREATE TABLE system_prompts (
 -- AGENTS
 -- ────────────────────────────────────────────────────────────
 CREATE TABLE agents (
-  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id            UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  name               TEXT NOT NULL,
-  model              TEXT NOT NULL,
-  description        TEXT,
-  system_prompt_ids  UUID[] DEFAULT '{}',
-  visibility         TEXT DEFAULT 'private' CHECK (visibility IN ('private', 'team', 'public')),
-  created_at         TIMESTAMPTZ DEFAULT NOW(),
-  updated_at         TIMESTAMPTZ DEFAULT NOW()
+  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id             UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name                TEXT NOT NULL,
+  model               TEXT NOT NULL,
+  description         TEXT,
+  system_prompt_id    UUID REFERENCES system_prompts(id) ON DELETE SET NULL,
+  knowledge_base_ids  UUID[] DEFAULT '{}',
+  visibility          TEXT DEFAULT 'private' CHECK (visibility IN ('private', 'team', 'public')),
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ────────────────────────────────────────────────────────────
@@ -102,6 +103,62 @@ CREATE POLICY "prompts_delete" ON system_prompts
 
 -- Conversations policies
 CREATE POLICY "conversations_all" ON conversations
+  FOR ALL USING (user_id = auth.uid());
+
+-- ────────────────────────────────────────────────────────────
+-- KNOWLEDGE BASES
+-- ────────────────────────────────────────────────────────────
+-- A user-owned container for related documents. Versioning of
+-- re-uploaded files is scoped within a single knowledge base.
+CREATE TABLE knowledge_bases (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name         TEXT NOT NULL,
+  description  TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX knowledge_bases_user_idx ON knowledge_bases (user_id);
+
+CREATE TRIGGER knowledge_bases_updated_at BEFORE UPDATE ON knowledge_bases
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+ALTER TABLE knowledge_bases ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "knowledge_bases_all" ON knowledge_bases
+  FOR ALL USING (user_id = auth.uid());
+
+-- ────────────────────────────────────────────────────────────
+-- KNOWLEDGE BASE DOCUMENTS
+-- ────────────────────────────────────────────────────────────
+-- Stores metadata about uploaded knowledge-base files. The raw
+-- text is chunked and embedded into Qdrant; this table is the
+-- source-of-truth for versioning and ownership.
+CREATE TABLE knowledge_documents (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  knowledge_base_id UUID REFERENCES knowledge_bases(id) ON DELETE CASCADE NOT NULL,
+  user_id           UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  filename          TEXT NOT NULL,
+  content_type      TEXT,
+  byte_size         BIGINT,
+  file_hash         TEXT,
+  version           INT NOT NULL DEFAULT 1,
+  num_chunks        INT NOT NULL DEFAULT 0,
+  is_latest         BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX knowledge_documents_kb_idx
+  ON knowledge_documents (knowledge_base_id, filename, version DESC);
+
+CREATE TRIGGER knowledge_documents_updated_at BEFORE UPDATE ON knowledge_documents
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+ALTER TABLE knowledge_documents ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "knowledge_documents_all" ON knowledge_documents
   FOR ALL USING (user_id = auth.uid());
 
 -- ────────────────────────────────────────────────────────────

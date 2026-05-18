@@ -3,11 +3,11 @@ import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import Layout from '../components/Layout'
-import { Bot, FileText, MessageSquare, Plus, ArrowRight } from 'lucide-react'
+import { Bot, FileText, Database, Plus, ArrowRight } from 'lucide-react'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const [stats, setStats] = useState({ agents: 0, prompts: 0 })
+  const [stats, setStats] = useState({ agents: 0, prompts: 0, knowledgeBases: 0 })
   const [recentAgents, setRecentAgents] = useState([])
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -20,13 +20,16 @@ export default function DashboardPage() {
       setUser(user)
 
       try {
-        const [agentsRes, promptsRes] = await Promise.all([
+        const [agentsRes, promptsRes, kbRes] = await Promise.all([
           api.agents.list(),
           api.prompts.list(),
+          api.knowledge.listBases(),
         ])
         setStats({
           agents: agentsRes.total ?? agentsRes.agents.length,
           prompts: promptsRes.total ?? promptsRes.prompts.length,
+          knowledgeBases:
+            kbRes.total ?? (kbRes.knowledge_bases ?? []).length,
         })
         setRecentAgents((agentsRes.agents ?? []).slice(0, 3))
       } catch (err) {
@@ -86,11 +89,10 @@ export default function DashboardPage() {
               href: '/prompts',
             },
             {
-              label: 'Knowledge Base',
-              value: 'Coming soon',
-              icon: MessageSquare,
-              href: '#',
-              muted: true,
+              label: 'Knowledge Bases',
+              value: loading ? '—' : stats.knowledgeBases,
+              icon: Database,
+              href: '/knowledge',
             },
           ].map((card) => {
             const Icon = card.icon

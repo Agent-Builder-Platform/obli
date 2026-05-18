@@ -8,12 +8,14 @@ import {
   LogOut,
   Menu,
   ChevronRight,
+  Database,
 } from 'lucide-react'
 import Logo from './Logo'
 
 const NAV_ITEMS = [
   { label: 'Your Agents', href: '/agents', icon: Bot },
   { label: 'System Prompt Library', href: '/prompts', icon: FileText },
+  { label: 'Knowledge Base', href: '/knowledge', icon: Database },
   // { label: 'Testing', href: '/testing', icon: FlaskConical, comingSoon: true },
 ]
 

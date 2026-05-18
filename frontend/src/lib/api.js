@@ -76,6 +76,45 @@ export const api = {
         .catch(() => null),
   },
 
+  // ── Knowledge Base ────────────────────────────────────────
+  knowledge: {
+    listBases: () => apiFetch('/api/knowledge/bases'),
+    createBase: (data) =>
+      apiFetch('/api/knowledge/bases', { method: 'POST', body: JSON.stringify(data) }),
+    getBase: (kbId) => apiFetch(`/api/knowledge/bases/${kbId}`),
+    updateBase: (kbId, data) =>
+      apiFetch(`/api/knowledge/bases/${kbId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    deleteBase: (kbId) =>
+      apiFetch(`/api/knowledge/bases/${kbId}`, { method: 'DELETE' }),
+
+    listDocuments: (kbId) => apiFetch(`/api/knowledge/bases/${kbId}/documents`),
+    uploadDocuments: async (kbId, files) => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const formData = new FormData()
+      for (const f of files) formData.append('files', f)
+      const res = await fetch(`${API_BASE}/api/knowledge/bases/${kbId}/documents`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: formData,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }))
+        const msg =
+          typeof err.detail === 'string' ? err.detail : err.detail?.message ?? 'Upload failed'
+        throw new Error(msg)
+      }
+      return res.json()
+    },
+    documentChunks: (docId) => apiFetch(`/api/knowledge/documents/${docId}/chunks`),
+    deleteDocument: (docId) =>
+      apiFetch(`/api/knowledge/documents/${docId}`, { method: 'DELETE' }),
+  },
+
   // ── Chat ──────────────────────────────────────────────────
   chat: {
     send: (data) =>

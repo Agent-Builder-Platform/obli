@@ -10,6 +10,8 @@ import ManageAgentsPage from './pages/ManageAgentsPage'
 import CreateAgentPage from './pages/CreateAgentPage'
 import ChatPage from './pages/ChatPage'
 import SystemPromptsPage from './pages/SystemPromptsPage'
+import KnowledgeBasePage from './pages/KnowledgeBasePage'
+import KnowledgeBaseDetailPage from './pages/KnowledgeBaseDetailPage'
 
 function PrivateRoute({ session, children }) {
   if (!session) return <Navigate to="/landing" replace />
@@ -107,6 +109,22 @@ export default function App() {
           element={
             <PrivateRoute session={session}>
               <SystemPromptsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/knowledge"
+          element={
+            <PrivateRoute session={session}>
+              <KnowledgeBasePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/knowledge/:kbId"
+          element={
+            <PrivateRoute session={session}>
+              <KnowledgeBaseDetailPage />
             </PrivateRoute>
           }
         />
