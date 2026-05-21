@@ -36,7 +36,12 @@ export default function Layout({ children, title }) {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) return
+      if (!user) {
+        if (isMounted) {
+          setAvatarLoaded(true)
+        }
+        return
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -166,15 +171,18 @@ export default function Layout({ children, title }) {
               aria-label="Profile"
               title="Profile"
             >
-              <img
-                src={avatarUrl || (avatarLoaded ? DEFAULT_AVATAR : '')}
-                alt="Profile"
-                className="w-7 h-7 rounded-full bg-white object-cover"
-                onError={() => {
-                  setAvatarUrl('')
-                  setAvatarLoaded(true)
-                }}
-              />
+              {avatarLoaded ? (
+                <img
+                  src={avatarUrl || DEFAULT_AVATAR}
+                  alt="Profile"
+                  className="w-7 h-7 rounded-full bg-white object-cover"
+                  onError={() => {
+                    setAvatarUrl('')
+                  }}
+                />
+              ) : (
+                <span className="w-7 h-7 rounded-full bg-base-200" />
+              )}
             </Link>
           </div>
         </header>
