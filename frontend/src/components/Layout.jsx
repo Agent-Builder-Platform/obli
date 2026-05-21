@@ -25,7 +25,8 @@ export default function Layout({ children, title }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR)
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarLoaded, setAvatarLoaded] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -45,6 +46,10 @@ export default function Layout({ children, title }) {
 
       if (!error && data?.avatar_url && isMounted) {
         setAvatarUrl(data.avatar_url)
+      }
+
+      if (isMounted) {
+        setAvatarLoaded(true)
       }
     }
 
@@ -162,10 +167,13 @@ export default function Layout({ children, title }) {
               title="Profile"
             >
               <img
-                src={avatarUrl}
+                src={avatarUrl || (avatarLoaded ? DEFAULT_AVATAR : '')}
                 alt="Profile"
                 className="w-7 h-7 rounded-full bg-white object-cover"
-                onError={() => setAvatarUrl(DEFAULT_AVATAR)}
+                onError={() => {
+                  setAvatarUrl('')
+                  setAvatarLoaded(true)
+                }}
               />
             </Link>
           </div>
