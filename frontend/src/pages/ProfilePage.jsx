@@ -104,8 +104,8 @@ export default function ProfilePage() {
     setError('')
     setSuccess('')
 
-    if (!file.type.startsWith('image/')) {
-      setError('Please choose an image file.')
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setError('Please choose a PNG or JPEG image.')
       e.target.value = ''
       return
     }
@@ -266,7 +266,7 @@ export default function ProfilePage() {
                   <input
                     id="avatar-upload"
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg"
                     className="hidden"
                     onChange={handleAvatarChange}
                     disabled={avatarUploading}
