@@ -164,7 +164,7 @@ export default function Layout({ children, title }) {
               <img
                 src={avatarUrl}
                 alt="Profile"
-                className="w-7 h-7 rounded-md bg-white object-cover"
+                className="w-7 h-7 rounded-full bg-white object-cover"
                 onError={() => setAvatarUrl(DEFAULT_AVATAR)}
               />
             </Link>

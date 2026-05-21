@@ -245,11 +245,11 @@ export default function ProfilePage() {
               )}
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-black flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 rounded-full bg-black overflow-hidden">
                   <img
                     src={form.avatar_url || DEFAULT_AVATAR}
                     alt="Profile avatar"
-                    className="w-16 h-16 object-cover rounded-md bg-white"
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
                 <div className="space-y-2">
