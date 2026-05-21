@@ -9,6 +9,7 @@ import {
   Menu,
   ChevronRight,
   Database,
+  User,
 } from 'lucide-react'
 import Logo from './Logo'
 
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { label: 'Your Agents', href: '/agents', icon: Bot },
   { label: 'System Prompt Library', href: '/prompts', icon: FileText },
   { label: 'Knowledge Base', href: '/knowledge', icon: Database },
+  { label: 'Profile', href: '/profile', icon: User },
   // { label: 'Testing', href: '/testing', icon: FlaskConical, comingSoon: true },
 ]
 

@@ -7,6 +7,20 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ────────────────────────────────────────────────────────────
+-- PROFILES
+-- ────────────────────────────────────────────────────────────
+CREATE TABLE profiles (
+  id           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username     TEXT UNIQUE,
+  display_name TEXT,
+  bio          TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX profiles_username_idx ON profiles (username);
+
+-- ────────────────────────────────────────────────────────────
 -- SYSTEM PROMPTS
 -- ────────────────────────────────────────────────────────────
 CREATE TABLE system_prompts (
@@ -62,6 +76,9 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER agents_updated_at BEFORE UPDATE ON agents
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+CREATE TRIGGER profiles_updated_at BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
 CREATE TRIGGER system_prompts_updated_at BEFORE UPDATE ON system_prompts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
@@ -74,6 +91,7 @@ CREATE TRIGGER conversations_updated_at BEFORE UPDATE ON conversations
 ALTER TABLE agents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_prompts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Agents policies
 CREATE POLICY "agents_select" ON agents
@@ -104,6 +122,14 @@ CREATE POLICY "prompts_delete" ON system_prompts
 -- Conversations policies
 CREATE POLICY "conversations_all" ON conversations
   FOR ALL USING (user_id = auth.uid());
+
+-- Profiles policies
+CREATE POLICY "profiles_select" ON profiles
+  FOR SELECT USING (id = auth.uid());
+CREATE POLICY "profiles_insert" ON profiles
+  FOR INSERT WITH CHECK (id = auth.uid());
+CREATE POLICY "profiles_update" ON profiles
+  FOR UPDATE USING (id = auth.uid());
 
 -- ────────────────────────────────────────────────────────────
 -- KNOWLEDGE BASES

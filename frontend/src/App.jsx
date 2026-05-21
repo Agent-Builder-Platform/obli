@@ -12,6 +12,7 @@ import ChatPage from './pages/ChatPage'
 import SystemPromptsPage from './pages/SystemPromptsPage'
 import KnowledgeBasePage from './pages/KnowledgeBasePage'
 import KnowledgeBaseDetailPage from './pages/KnowledgeBaseDetailPage'
+import ProfilePage from './pages/ProfilePage'
 
 function PrivateRoute({ session, children }) {
   if (!session) return <Navigate to="/landing" replace />
@@ -125,6 +126,14 @@ export default function App() {
           element={
             <PrivateRoute session={session}>
               <KnowledgeBaseDetailPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute session={session}>
+              <ProfilePage />
             </PrivateRoute>
           }
         />
