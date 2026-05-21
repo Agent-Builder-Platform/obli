@@ -117,7 +117,7 @@ export default function CreateAgentPage() {
         </button>
 
         <div className="mb-6">
-          <h1 className="text-xl font-bold">Create Agent</h1>
+          <h1 className="text-xl font-bold">Create Agent/s</h1>
           <p className="text-base-content/50 text-sm mt-1">
             Configure your AI agent's identity and capabilities.
           </p>
