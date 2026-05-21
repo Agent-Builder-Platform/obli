@@ -157,7 +157,7 @@ export default function Layout({ children, title }) {
           <div className="ml-auto">
             <Link
               to="/profile"
-              className="w-9 h-9 rounded-full bg-black flex items-center justify-center"
+              className="w-9 h-9 rounded-full flex items-center justify-center"
               aria-label="Profile"
               title="Profile"
             >
