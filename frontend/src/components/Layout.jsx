@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import {
@@ -9,15 +9,15 @@ import {
   Menu,
   ChevronRight,
   Database,
-  User,
 } from 'lucide-react'
 import Logo from './Logo'
+
+const DEFAULT_AVATAR = '/default_logo.png'
 
 const NAV_ITEMS = [
   { label: 'Your Agents', href: '/agents', icon: Bot },
   { label: 'System Prompt Library', href: '/prompts', icon: FileText },
   { label: 'Knowledge Base', href: '/knowledge', icon: Database },
-  { label: 'Profile', href: '/profile', icon: User },
   // { label: 'Testing', href: '/testing', icon: FlaskConical, comingSoon: true },
 ]
 
@@ -25,6 +25,35 @@ export default function Layout({ children, title }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadAvatar() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (!error && data?.avatar_url && isMounted) {
+        setAvatarUrl(data.avatar_url)
+      }
+    }
+
+    loadAvatar()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -123,6 +152,22 @@ export default function Layout({ children, title }) {
             <span>Obli.</span>
             <ChevronRight size={14} />
             <span className="text-base-content font-medium">{title}</span>
+          </div>
+
+          <div className="ml-auto">
+            <Link
+              to="/profile"
+              className="w-9 h-9 rounded-full bg-black flex items-center justify-center"
+              aria-label="Profile"
+              title="Profile"
+            >
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                className="w-7 h-7 rounded-md bg-white object-cover"
+                onError={() => setAvatarUrl(DEFAULT_AVATAR)}
+              />
+            </Link>
           </div>
         </header>
 

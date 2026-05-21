@@ -3,15 +3,21 @@ import Layout from '../components/Layout'
 import { supabase } from '../lib/supabase'
 import { Save } from 'lucide-react'
 
+const DEFAULT_AVATAR = '/default_logo.png'
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024
+const MAX_AVATAR_DIMENSION = 512
+
 export default function ProfilePage() {
   const [user, setUser] = useState(null)
   const [form, setForm] = useState({
     username: '',
     display_name: '',
+    avatar_url: '',
     bio: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -32,7 +38,7 @@ export default function ProfilePage() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, display_name, bio')
+        .select('username, display_name, avatar_url, bio')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -42,6 +48,7 @@ export default function ProfilePage() {
         setForm({
           username: data.username ?? '',
           display_name: data.display_name ?? '',
+          avatar_url: data.avatar_url ?? '',
           bio: data.bio ?? '',
         })
       } else {
@@ -55,9 +62,111 @@ export default function ProfilePage() {
     loadProfile()
   }, [])
 
+  async function resizeAvatar(file) {
+    const image = await createImageBitmap(file)
+    const maxSide = Math.max(image.width, image.height)
+    const scale = maxSide > MAX_AVATAR_DIMENSION ? MAX_AVATAR_DIMENSION / maxSide : 1
+    const width = Math.round(image.width * scale)
+    const height = Math.round(image.height * scale)
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('Unable to process the image.')
+    }
+
+    ctx.drawImage(image, 0, 0, width, height)
+
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.85)
+    )
+
+    if (!blob) {
+      throw new Error('Unable to process the image.')
+    }
+
+    return new File([blob], 'avatar.jpg', { type: 'image/jpeg' })
+  }
+
   function updateField(field) {
     return (e) => {
       setForm((prev) => ({ ...prev, [field]: e.target.value }))
+    }
+  }
+
+  async function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setError('')
+    setSuccess('')
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file.')
+      e.target.value = ''
+      return
+    }
+
+    if (!user) {
+      setError('You must be signed in to update your profile.')
+      e.target.value = ''
+      return
+    }
+
+    setAvatarUploading(true)
+
+    try {
+      const resized = await resizeAvatar(file)
+      if (resized.size > MAX_AVATAR_BYTES) {
+        setError('Image is too large after resizing. Please choose a smaller file.')
+        return
+      }
+
+      const filePath = `${user.id}/avatar.jpg`
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, resized, {
+          upsert: true,
+          contentType: resized.type,
+          cacheControl: '3600',
+        })
+
+      if (uploadError) {
+        setError(uploadError.message)
+        return
+      }
+
+      const { data: publicData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+      const avatarUrl = publicData?.publicUrl
+        ? `${publicData.publicUrl}?v=${Date.now()}`
+        : ''
+
+      if (!avatarUrl) {
+        setError('Unable to load the uploaded image.')
+        return
+      }
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id, avatar_url: avatarUrl }, { onConflict: 'id' })
+
+      if (profileError) {
+        setError(profileError.message)
+        return
+      }
+
+      setForm((prev) => ({ ...prev, avatar_url: avatarUrl }))
+      setSuccess('Profile photo updated.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setAvatarUploading(false)
+      e.target.value = ''
     }
   }
 
@@ -67,7 +176,7 @@ export default function ProfilePage() {
     setSuccess('')
 
     if (!user) {
-      setError('You must be signed in to update your profile.')
+      setError('Signed in to update your profile.')
       return
     }
 
@@ -85,6 +194,7 @@ export default function ProfilePage() {
       id: user.id,
       username: username || null,
       display_name: displayName || null,
+      avatar_url: form.avatar_url || null,
       bio: bio || null,
     }
 
@@ -92,8 +202,13 @@ export default function ProfilePage() {
       .from('profiles')
       .upsert(payload, { onConflict: 'id' })
 
+    //Ensures that the user's username is unqiue
     if (error) {
-      setError(error.message)
+      if (error.code === '23505') {
+        setError('That username is already taken.')
+      } else {
+        setError(error.message)
+      }
     } else {
       setSuccess('Profile updated.')
     }
@@ -129,6 +244,39 @@ export default function ProfilePage() {
                 </div>
               )}
 
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-black flex items-center justify-center overflow-hidden">
+                  <img
+                    src={form.avatar_url || DEFAULT_AVATAR}
+                    alt="Profile avatar"
+                    className="w-16 h-16 object-cover rounded-md bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    className={`btn btn-outline btn-sm ${avatarUploading ? 'btn-disabled' : ''}`}
+                    htmlFor="avatar-upload"
+                  >
+                    {avatarUploading ? (
+                      <span className="loading loading-spinner loading-sm" />
+                    ) : (
+                      'Upload photo'
+                    )}
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                    disabled={avatarUploading}
+                  />
+                  <p className="text-xs text-base-content/40">
+                    PNG or JPG, up to 2MB. Large images will be resized.
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label pb-1.5">
@@ -144,7 +292,7 @@ export default function ProfilePage() {
                     onChange={updateField('username')}
                   />
                   <p className="text-xs text-base-content/40 mt-1">
-                    Used for sharing agents. Must be unique.
+                    Must be unique.
                   </p>
                 </div>
 
