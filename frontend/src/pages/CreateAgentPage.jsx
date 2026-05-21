@@ -105,7 +105,7 @@ export default function CreateAgentPage() {
   const selectedKbsData = knowledgeBases.filter((k) => selectedKbIds.includes(k.id))
 
   return (
-    <Layout title="Create Agent">
+    <Layout title="Create Agent/s">
       <div className="p-6 lg:p-8 max-w-2xl mx-auto">
         {/* Back */}
         <button
